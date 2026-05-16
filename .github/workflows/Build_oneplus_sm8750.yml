@@ -548,8 +548,8 @@ jobs:
       - name: 🔧 Fix SukiSU compilation error (修复USER_ARG_NULL编译错误)
         run: |
           EVENT_FILE="kernel_workspace/common/drivers/kernelsu/sulog/event.c"
-          sed -i 's/#define USER_ARG_NULL ((struct user_arg_ptr){ 0 })/#define USER_ARG_NULL ((struct user_arg_ptr *)NULL)/' "$EVENT_FILE" || true
-          sed -i '/ksu_sulog_capture.*USER_ARG_NULL/s/\&USER_ARG_NULL/USER_ARG_NULL/g' "$EVENT_FILE" || true
+          sed -i 's/#define USER_ARG_NULL ((struct user_arg_ptr){ 0 })/#define USER_ARG_NULL ((struct user_arg_ptr *)NULL)/' "$EVENT_FILE"
+          sed -i '/ksu_sulog_capture.*USER_ARG_NULL/s/&*USER_ARG_NULL/USER_ARG_NULL/g' "$EVENT_FILE"
           echo "SukiSU编译兼容补丁应用完成"
 
             
@@ -567,8 +567,8 @@ jobs:
           patch -p1 -N -F 3 < 69_hide_stuff.patch || true
           # SUSFS补丁可能重新引入USER_ARG_NULL调用点，再次修复
           EVENT_FILE="${GITHUB_WORKSPACE}/kernel_workspace/common/drivers/kernelsu/sulog/event.c"
-          sed -i 's/#define USER_ARG_NULL ((struct user_arg_ptr){ 0 })/#define USER_ARG_NULL ((struct user_arg_ptr *)NULL)/' "$EVENT_FILE" || true
-          sed -i '/ksu_sulog_capture.*USER_ARG_NULL/s/\&USER_ARG_NULL/USER_ARG_NULL/g' "$EVENT_FILE" || true
+          sed -i 's/#define USER_ARG_NULL ((struct user_arg_ptr){ 0 })/#define USER_ARG_NULL ((struct user_arg_ptr *)NULL)/' "$EVENT_FILE"
+          sed -i '/ksu_sulog_capture.*USER_ARG_NULL/s/&*USER_ARG_NULL/USER_ARG_NULL/g' "$EVENT_FILE"
           echo "[OK] SUSFS 补丁处理流程全部完成"
 
       - name: 🔧 Add Droidspaces Support (添加 Droidspaces 支持)
