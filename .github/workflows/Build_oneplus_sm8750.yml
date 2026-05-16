@@ -270,7 +270,6 @@ jobs:
             const releaseTag = process.env.PUBLIC_CACHE_TAG || 'exported-ccaches';
             const [owner, repo] = repoName.split('/');
             const deviceName = process.env.DEVICE_NAME;
-            let selected = null;
 
             const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const exactAssetName = `ccache-${deviceName}.tar.zst`;
@@ -295,32 +294,27 @@ jobs:
             }
 
             let found = false;
+            let selectedAsset = null;
             for (const asset of release.assets || []) {
               const isExactMatch = asset.name === exactAssetName;
               const isLegacyMatch = legacyAssetPattern.test(asset.name);
               if (isExactMatch || isLegacyMatch) {
                 core.info(`找到公共缓存: ${asset.name}`);
-                core.setOutput('cache-url', asset.browser_download_url);
-                core.setOutput('cache-name', asset.name);
+                selectedAsset = { name: asset.name, url: asset.browser_download_url, repo: repoName, tag: releaseTag };
                 found = true;
                 break;
               }
             }
+
             if (!found) {
               core.info(`未找到 ${deviceName} 的公共缓存`);
-            }
-              }
-            }
-
-            if (!selected) {
-              core.info('未找到可用的公共 ccache 资产，将使用空缓存继续构建');
               return;
             }
 
-            core.info(`找到公共缓存: ${selected.name} (${selected.repo}@${selected.tag})`);
-            core.setOutput('asset-name', selected.name);
-            core.setOutput('release-tag', selected.tag);
-            core.setOutput('source-repo', selected.repo);
+            core.info(`找到公共缓存: ${selectedAsset.name} (${selectedAsset.repo}@${selectedAsset.tag})`);
+            core.setOutput('asset-name', selectedAsset.name);
+            core.setOutput('release-tag', selectedAsset.tag);
+            core.setOutput('source-repo', selectedAsset.repo);
 
       - name: 📦 Restore public ccache from releases (恢复公共缓存)
         if: ${{ steps.ccache-restore.outputs.cache-matched-key == '' && steps.public-ccache.outputs.asset-name != '' }}
