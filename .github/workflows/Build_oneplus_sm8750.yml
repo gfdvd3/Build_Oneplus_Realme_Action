@@ -363,6 +363,10 @@ jobs:
           export CCACHE_MAXSIZE="${{ env.CCACHE_MAXSIZE }}"
           export CCACHE_SLOPPINESS="file_stat_matches,include_file_ctime,include_file_mtime,pch_defines,file_macro,time_macros"
           export CCACHE_DEPEND=1
+          export CCACHE_FILECLONE=1
+          echo "CCACHE_SLOPPINESS=$CCACHE_SLOPPINESS" >> $GITHUB_ENV
+          echo "CCACHE_DEPEND=1" >> $GITHUB_ENV
+          echo "PAHOLE=false" >> $GITHUB_ENV
 
           mkdir -p "$CCACHE_DIR"
 
@@ -731,19 +735,19 @@ jobs:
           echo "BUILD_TIME=$TIME" >> $GITHUB_ENV
           echo "Build time: $TIME seconds"
 
-      - name: 📥 Save ccache if needed (构建时间较长或首次落地本地缓存时保存)
-        if: ${{ env.BUILD_TIME > 480 || steps.ccache-restore.outputs.cache-matched-key == '' }}
+      - name: 📥 Save ccache always (保存ccache缓存)
+        if: ${{ !cancelled() }}
         uses: actions/cache/save@v5
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ccache-ECS-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-${{ github.run_id }}
+          key: ccache-ECS-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-latest
 
       - name: 🧹 Clean old ccache (清理旧缓存)
-        if: env.BUILD_TIME > 480
+        if: steps.ccache-restore.outputs.cache-matched-key == ''
         uses: actions/github-script@v8
         env:
           PREFIX: ccache-ECS-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-
-          CURRENT_KEY: ccache-ECS-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-${{ github.run_id }}
+          CURRENT_KEY: ccache-ECS-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-latest
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -752,8 +756,8 @@ jobs:
             let page = 1;
             let deleted = 0;
 
-            core.info('构建时间超过8分钟，已保存ccache缓存');
-            core.info(`正在清理旧缓存，匹配前缀: ${prefix}`);
+            core.info('正在清理旧ccache缓存...');
+            core.info(`匹配前缀: ${prefix}`);
 
             while (true) {
               const response = await github.rest.actions.getActionsCacheList({
