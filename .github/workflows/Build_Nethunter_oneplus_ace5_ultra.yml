@@ -1,0 +1,299 @@
+name: Build_Nethunter_oneplus_ace5_ultra
+permissions:
+  contents: read
+  actions: write
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build_Nethunter_ace5_ultra
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      DEVICES_NAME: oneplus_ace5_ultra
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🛠 Install dependencies and sync source (安装环境依赖+初始化源码)
+        run: |
+          rm -rf kernel_workspace
+          mkdir kernel_workspace
+          cd kernel_workspace
+          sudo apt-mark hold firefox libc-bin
+          sudo apt purge man-db
+          sudo rm -rf /var/lib/man-db/auto-update
+          sudo apt update
+          sudo apt-get install -y --no-install-recommends binutils python-is-python3 libssl-dev libelf-dev dos2unix p7zip-full zstd
+          echo "正在克隆源码仓库..."
+          aria2c -s16 -x16 -k1M https://github.com/gfdvd3/android_kernel_oneplus_mt6991/archive/refs/heads/oneplus/mt6991_v_15.0.2_ace5_ultra.zip -o common.zip
+          unzip -q common.zip
+          mv android_kernel_oneplus_mt6991-* common
+          rm -rf common.zip
+          echo "正在克隆llvm-clang18工具链..."
+          mkdir -p clang18
+          aria2c -s16 -x16 -k1M https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang18-r510928/clang-r510928.zip -o clang.zip
+          unzip -q clang.zip -d clang18
+          rm -rf clang.zip
+          echo "正在克隆构建工具..."
+          aria2c -s16 -x16 -k1M https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang18-r510928/build-tools.zip -o build-tools.zip
+          unzip -q build-tools.zip
+          rm -rf build-tools.zip
+          wait
+          echo "所有源码及LLVM-Clang18工具链初始化完成！"
+
+      - name: 🔧 Apply NetHunter kernel config (应用NetHunter内核配置)
+        run: |
+          cd kernel_workspace/common
+          # NetHunter - General
+          echo "CONFIG_SYSVIPC=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_POSIX_MQUEUE=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IPC_NS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_PID_NS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DEVTMPFS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KALLSYMS_ALL=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MODULES=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MODULE_UNLOAD=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MODULE_FORCE_UNLOAD=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MODVERSIONS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_SWAP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CGROUPS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MEMCG=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BLK_CGROUP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NAMESPACES=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_EXPERT=y" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - Network / BT
+          echo "CONFIG_NETFILTER=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_TARGET_CONNMARK=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_TARGET_MARK=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_MATCH_CONNMARK=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_MATCH_CONNTRACK=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_MATCH_STATE=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_MATCH_MAC=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_MATCH_IPRANGE=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_MATCH_LIMIT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_TARGET_LOG=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_MATCH_RECENT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IP_SET=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IP_SET_HASH_IP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IP_SET_HASH_NET=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NETFILTER_XT_SET=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IP_NF_IPTABLES=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IP_NF_NAT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IP_NF_TARGET_MASQUERADE=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IP_NF_MANGLE=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NF_CONNTRACK=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NF_CONNTRACK_FTP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NF_CONNTRACK_TFTP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NF_CONNTRACK_IRC=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BRIDGE=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_VLAN_8021Q=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_PACKET=y" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - MAC80211
+          echo "CONFIG_CFG80211=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CFG80211_WEXT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MAC80211=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MAC80211_MESH=y" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - Bluetooth
+          echo "CONFIG_BT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_RFCOMM=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_HIDP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_HCIBTUSB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_HCIBTUSB_BCM=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_HCIBTUSB_RTL=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_HCIUART=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_HCIUART_H4=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_HCIBCM203X=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_HCIBPA10X=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_HCIBFUSB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BT_HCIVHCI=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RFKILL=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RFKILL_INPUT=y" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - Wireless USB
+          echo "CONFIG_WLAN_VENDOR_ATH=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_ATH9K_HTC=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CARL9170=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_ATH6KL=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_ATH6KL_USB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_WLAN_VENDOR_MEDIATEK=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MT7601U=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_WLAN_VENDOR_RALINK=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RT2X00=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RT2500USB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RT73USB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RT2800USB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RT2800USB_RT33XX=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RT2800USB_RT35XX=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RT2800USB_RT3573=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RT2800USB_RT53XX=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RT2800USB_RT55XX=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RT2800USB_UNKNOWN=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_WLAN_VENDOR_REALTEK=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RTL8187=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RTL_CARDS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RTL8192CU=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_RTL8XXXU_UNTESTED=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_WLAN_VENDOR_ZYDAS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_ZD1201=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_ZD1211RW=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_NET_RNDIS_WLAN=y" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - SDR
+          echo "CONFIG_MEDIA_DIGITAL_TV_SUPPORT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MEDIA_SDR_SUPPORT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MEDIA_USB_SUPPORT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_AIRSPY=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_HACKRF=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_MSI2500=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DVB_RTL2830=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DVB_RTL2832=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DVB_RTL2832_SDR=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DVB_SI2168=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DVB_ZD1301_DEMOD=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_MEDIA_SUBDRV_AUTOSELECT=n" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - USB Gadget (HID, BadUSB, serial)
+          echo "CONFIG_USB_GADGET=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_SERIAL=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_ACM=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_OBEX=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_NCM=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_ECM=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_ECM_SUBSET=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_RNDIS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_EEM=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_MASS_STORAGE=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_F_FS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_F_HID=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_F_UVC=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_F_MIDI=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_CONFIGFS_F_UAC2=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_ACM=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_SERIAL=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_SERIAL_GENERIC=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_SERIAL_FTDI_SIO=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_SERIAL_CH341=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_SERIAL_CP210X=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_SERIAL_PL2303=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_SERIAL_CONSOLE=y" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - CAN bus
+          echo "CONFIG_CAN=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_RAW=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_BCM=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_GW=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_DEV=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_CALC_BITTIMING=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_LEDS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_VCAN=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_SLCAN=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_HI311X=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_MCP251X=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_EMS_USB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_ESD_USB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_GS_USB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_KVASER_USB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_PEAK_USB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CAN_8DEV_USB=y" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - NFS
+          echo "CONFIG_NFS_V2=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NFS_V3=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NFS_V4=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NFSD=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NFSD_V3=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NFSD_V4=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CIFS=y" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - HID / Input
+          echo "CONFIG_HIDRAW=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_UHID=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_HIDDEV=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_INPUT_UINPUT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_INPUT_JOYSTICK=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_JOYSTICK_XPAD=y" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - USB networking
+          echo "CONFIG_USB_USBNET=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_RTL8150=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_RTL8152=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_NET_CDC_EEM=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_USB_NET_CDC_SUBSET=y" >> ./arch/arm64/configs/gki_defconfig
+          # NetHunter - Misc
+          echo "CONFIG_PPP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_PPP_BSDCOMP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_PPP_DEFLATE=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_PPP_MPPE=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_PPTP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_PPPOL2TP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_WIREGUARD=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TUN=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_VETH=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DUMMY=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IFB=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_BRIDGE_NETFILTER=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NF_NAT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NF_NAT_FTP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NF_NAT_TFTP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NF_NAT_IRC=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_XFRM_USER=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_INET_ESP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_INET6_ESP=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCHED=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCH_FQ_CODEL=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_CLS_FLOW=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_EMATCH=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_CLS_ACT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DM_CRYPT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DM_VERITY=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_OVERLAY_FS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_FUSE_FS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NFC=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IIO=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "NetHunter内核配置添加完成"
+
+      - name: 🔧 Set Kernel name (设置内核名称)
+        run: |
+          cd kernel_workspace/common
+          sed -i 's/CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION="-nethunter"/' ./arch/arm64/configs/gki_defconfig
+          sed -i 's/${scm_version}//' ./scripts/setlocalversion
+          sudo sed -i 's/check_defconfig//' ../common/build.config.gki
+
+      - name: 📥 Start build timer
+        run: echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
+
+      - name: 🔨 Build Kernel (构建内核)
+        run: |
+          WORKDIR="$(pwd)"
+          export PATH="/usr/lib/ccache:$PATH"
+          export PATH="$WORKDIR/kernel_workspace/clang18/bin:$PATH"
+          export PATH="$WORKDIR/kernel_workspace/build-tools/bin:$PATH"
+          CLANG_DIR="$WORKDIR/kernel_workspace/clang18/bin"
+          CLANG_VERSION="$($CLANG_DIR/clang --version | head -n 1)"
+          LLD_VERSION="$($CLANG_DIR/ld.lld --version | head -n 1)"
+          echo "CLANG: $CLANG_VERSION"
+          echo "LLD: $LLD_VERSION"
+          cd kernel_workspace/common
+          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" LD="ld.lld" HOSTLD=ld.lld O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error gki_defconfig
+          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" LD="ld.lld" HOSTLD=ld.lld O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error Image
+          echo "构建完成"
+
+      - name: 🕒 Calculate build time
+        run: |
+          END=$(date +%s)
+          TIME=$((END - BUILD_START))
+          echo "BUILD_TIME=$TIME" >> $GITHUB_ENV
+          echo "Build time: $TIME seconds"
+
+      - name: 📦 Make AnyKernel3
+        run: |
+          cp "${GITHUB_WORKSPACE}/.github/workflows/tools/main.bin" ./
+          chmod +x main.bin
+          ./main.bin "make_anykernel3"
+          rm -rf ./main.bin
+
+      - name: 📤 Upload AnyKernel3
+        uses: actions/upload-artifact@v5
+        with:
+          name: AK3_Nethunter_oneplus_ace5_ultra
+          path: ./AnyKernel3/*
