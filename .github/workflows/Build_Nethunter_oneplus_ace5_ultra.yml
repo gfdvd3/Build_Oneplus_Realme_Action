@@ -291,7 +291,7 @@ jobs:
         if: ${{ steps.public-ccache.outputs.cache-url != '' }}
         run: |
           mkdir -p "${{ env.CCACHE_DIR }}"
-          aria2c -s16 -x16 -k1M "${{ steps.public-ccache.outputs.cache-url }}" -o /tmp/public_ccache.tar.zst
+          aria2c -s16 -x16 -k1M --dir=/tmp "${{ steps.public-ccache.outputs.cache-url }}" -o public_ccache.tar.zst
           tar -I zstd -xf /tmp/public_ccache.tar.zst -C "${{ env.CCACHE_DIR }}"
           rm -f /tmp/public_ccache.tar.zst
           echo "公共缓存恢复完成，当前缓存大小:"
