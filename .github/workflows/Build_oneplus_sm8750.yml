@@ -544,6 +544,12 @@ jobs:
             echo "SukiSU版本号: v${KSU_API_VERSION}-${GIT_COMMIT_HASH}-TG@qdykernel"
           fi
 
+      - name: 🔧 Fix SukiSU compilation error (修复USER_ARG_NULL编译错误)
+        run: |
+          cd kernel_workspace/common/drivers/kernelsu/sulog
+          sed -i 's/USER_ARG_NULL)/\&USER_ARG_NULL)/g' event.c || true
+          echo "SukiSU编译兼容补丁应用完成"
+
             
       - name: 🔧 Set up SUSFS (配置 SUSFS)
         if: ${{ env.ENABLE_SUSFS == 'true' }}
