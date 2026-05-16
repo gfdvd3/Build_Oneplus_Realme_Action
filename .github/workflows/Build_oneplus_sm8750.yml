@@ -547,7 +547,7 @@ jobs:
       - name: 🔧 Fix SukiSU compilation error (修复USER_ARG_NULL编译错误)
         run: |
           cd kernel_workspace/common/drivers/kernelsu/sulog
-          sed -i 's/USER_ARG_NULL)/\&USER_ARG_NULL)/g' event.c || true
+          sed -i '/ksu_sulog_capture.*USER_ARG_NULL/s/USER_ARG_NULL/\&USER_ARG_NULL/' event.c || true
           echo "SukiSU编译兼容补丁应用完成"
 
             
