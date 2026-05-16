@@ -720,17 +720,22 @@ jobs:
       - name: 📥 Start build timer
         run: echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
 
-      - name: 📥 Init ccache (初始化缓存)
+      - name: 📥 Init ccache (初始化缓存+调优)
         run: |
           export CCACHE_DIR=$HOME/.ccache_${{ env.KSU_TYPE }}_${{ env.DEVICES_NAME }}
           export CCACHE_COMPRESS=1
           export CCACHE_COMPRESSLEVEL=6
           export CCACHE_MAXSIZE=8G
+          export CCACHE_SLOPPINESS=file_stat_matches,include_file_ctime,include_file_mtime,pch_defines,file_macro,time_macros
+          export CCACHE_DEPEND=1
+          export CCACHE_FILECLONE=1
           sudo /usr/sbin/update-ccache-symlinks
           echo "CCACHE_DIR=$HOME/.ccache_${{ env.KSU_TYPE }}_${{ env.DEVICES_NAME }}" >> $GITHUB_ENV
           echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
           echo "CCACHE_COMPRESSLEVEL=6" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=8G" >> $GITHUB_ENV
+          echo "CCACHE_SLOPPINESS=file_stat_matches,include_file_ctime,include_file_mtime,pch_defines,file_macro,time_macros" >> $GITHUB_ENV
+          echo "CCACHE_DEPEND=1" >> $GITHUB_ENV
           clang --version
 
       - name: 🔨 Build Kernel (构建内核)
@@ -793,6 +798,13 @@ jobs:
           LD_PRELOAD=$PRELOAD_LIBS stat ./Makefile
           echo "ccache状态："
           ccache -s
+
+      - name: 💾 Save ccache cache (保存ccache缓存)
+        if: ${{ !cancelled() }}
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-ECS-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-latest
 
       - name: 🕒 Calculate build time
         run: |
