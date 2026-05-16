@@ -439,7 +439,8 @@ jobs:
         run: |
           EVENT_FILE="kernel_workspace/common/drivers/kernelsu/sulog/event.c"
           sed -i 's/#define USER_ARG_NULL ((struct user_arg_ptr){ 0 })/#define USER_ARG_NULL ((struct user_arg_ptr *)NULL)/' "$EVENT_FILE" || true
-          sed -i '/ksu_sulog_capture.*USER_ARG_NULL/s/USER_ARG_NULL/\&USER_ARG_NULL/' "$EVENT_FILE" || true
+          # 宏已返回指针，不要再加&，否则变成&&
+          sed -i '/ksu_sulog_capture.*USER_ARG_NULL/s/\&USER_ARG_NULL/USER_ARG_NULL/g' "$EVENT_FILE" || true
           echo "KSU编译兼容补丁应用完成"
 
       - name: 🔧 Set up SUSFS (配置SUSFS)
@@ -456,7 +457,7 @@ jobs:
           patch -p1 -N -F 3 < 69_hide_stuff.patch || true
           EVENT_FILE="${GITHUB_WORKSPACE}/kernel_workspace/common/drivers/kernelsu/sulog/event.c"
           sed -i 's/#define USER_ARG_NULL ((struct user_arg_ptr){ 0 })/#define USER_ARG_NULL ((struct user_arg_ptr *)NULL)/' "$EVENT_FILE" || true
-          sed -i '/ksu_sulog_capture.*USER_ARG_NULL/s/USER_ARG_NULL/\&USER_ARG_NULL/' "$EVENT_FILE" || true
+          sed -i '/ksu_sulog_capture.*USER_ARG_NULL/s/\&USER_ARG_NULL/USER_ARG_NULL/g' "$EVENT_FILE" || true
           echo "[OK] SUSFS 补丁处理完成"
 
       - name: 🔧 Add Droidspaces Support (添加Droidspaces支持)
