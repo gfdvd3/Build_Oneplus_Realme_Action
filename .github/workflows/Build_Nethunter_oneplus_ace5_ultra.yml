@@ -26,7 +26,7 @@ jobs:
           sudo apt purge man-db
           sudo rm -rf /var/lib/man-db/auto-update
           sudo apt update
-          sudo apt-get install -y --no-install-recommends binutils python-is-python3 libssl-dev libelf-dev dos2unix p7zip-full zstd
+          sudo apt-get install -y --no-install-recommends binutils python-is-python3 libssl-dev libelf-dev dos2unix p7zip-full zstd ccache
           echo "正在克隆源码仓库..."
           aria2c -s16 -x16 -k1M https://github.com/gfdvd3/android_kernel_oneplus_mt6991/archive/refs/heads/oneplus/mt6991_v_15.0.2_ace5_ultra.zip -o common.zip
           unzip -q common.zip
@@ -262,12 +262,27 @@ jobs:
       - name: 📥 Start build timer
         run: echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
 
+      - name: 📥 Init ccache (初始化缓存)
+        run: |
+          export CCACHE_DIR=$HOME/ccache
+          export CCACHE_COMPRESS=1
+          export CCACHE_COMPRESSLEVEL=6
+          export CCACHE_MAXSIZE=8G
+          sudo /usr/sbin/update-ccache-symlinks
+          echo "CCACHE_DIR=$HOME/ccache" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESSLEVEL=6" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=8G" >> $GITHUB_ENV
+          clang --version
+
       - name: 🔨 Build Kernel (构建内核)
         run: |
           WORKDIR="$(pwd)"
           export PATH="/usr/lib/ccache:$PATH"
           export PATH="$WORKDIR/kernel_workspace/clang18/bin:$PATH"
           export PATH="$WORKDIR/kernel_workspace/build-tools/bin:$PATH"
+          which ccache
+          ccache --version
           CLANG_DIR="$WORKDIR/kernel_workspace/clang18/bin"
           CLANG_VERSION="$($CLANG_DIR/clang --version | head -n 1)"
           LLD_VERSION="$($CLANG_DIR/ld.lld --version | head -n 1)"
