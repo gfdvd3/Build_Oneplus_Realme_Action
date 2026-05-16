@@ -271,6 +271,7 @@ jobs:
               core.info(`未找到公共缓存 release: ${releaseTag}`);
               return;
             }
+            let found = false;
             for (const asset of release.assets || []) {
               const isExactMatch = asset.name === exactAssetName;
               const isLegacyMatch = legacyAssetPattern.test(asset.name);
@@ -278,10 +279,11 @@ jobs:
                 core.info(`找到公共缓存: ${asset.name}`);
                 core.setOutput('cache-url', asset.browser_download_url);
                 core.setOutput('cache-name', asset.name);
+                found = true;
                 break;
               }
             }
-            if (!core.getOutput('cache-url')) {
+            if (!found) {
               core.info(`未找到 ${deviceName} 的公共缓存`);
             }
 

@@ -294,24 +294,21 @@ jobs:
               return;
             }
 
+            let found = false;
             for (const asset of release.assets || []) {
               const isExactMatch = asset.name === exactAssetName;
               const isLegacyMatch = legacyAssetPattern.test(asset.name);
               if (isExactMatch || isLegacyMatch) {
-                const shouldReplace =
-                  !selected ||
-                  (isExactMatch && !selected.exact) ||
-                  (isExactMatch === selected.exact && new Date(asset.updated_at) > new Date(selected.updated_at));
-
-                if (shouldReplace) {
-                  selected = {
-                    name: asset.name,
-                    updated_at: asset.updated_at,
-                    tag: release.tag_name,
-                    repo: `${owner}/${repo}`,
-                    exact: isExactMatch,
-                  };
-                }
+                core.info(`找到公共缓存: ${asset.name}`);
+                core.setOutput('cache-url', asset.browser_download_url);
+                core.setOutput('cache-name', asset.name);
+                found = true;
+                break;
+              }
+            }
+            if (!found) {
+              core.info(`未找到 ${deviceName} 的公共缓存`);
+            }
               }
             }
 
