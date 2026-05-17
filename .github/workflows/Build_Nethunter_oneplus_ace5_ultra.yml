@@ -4,8 +4,8 @@ env:
   TZ: Asia/Shanghai
   KERNEL_REPO: gfdvd3/android_kernel_oneplus_mt6991
   KERNEL_BRANCH: '16'
-  MODULES_REPO: gfdvd3/android_kernel_modules_and_devicetree_oneplus_mt6991
-  MODULES_BRANCH: '16'
+  MODULES_REPO: OnePlusOSS/android_kernel_modules_and_devicetree_oneplus_mt6991
+  MODULES_BRANCH: oneplus/mt6991_b_16.0.0_oneplus_ace5_ultra
   CCACHE_DIR: /tmp/ccache
   CCACHE_MAXSIZE: 5G
   SCHED_FILE: oneplus_ace5_ultra_b
