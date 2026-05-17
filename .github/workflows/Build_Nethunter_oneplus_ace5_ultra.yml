@@ -124,6 +124,9 @@ jobs:
           echo 'module(name = "kernel", version = "0.0.0")' > MODULE.bazel
           echo 'bazel_dep(name = "kleaf", version = "0.0.0")' >> MODULE.bazel
           echo 'local_path_override(module_name = "kleaf", path = "build/kernel")' >> MODULE.bazel
+          echo 'import %workspace%/build/kernel/kleaf/common.bazelrc' > .bazelrc
+          echo 'import %workspace%/build/kernel/kleaf/bazelrc/fast.bazelrc' >> .bazelrc
+          echo 'import %workspace%/build/kernel/kleaf/bazelrc/stamp.bazelrc' >> .bazelrc
           echo '7.1.0' > .bazelversion
 
       - name: Setup Bazelisk
