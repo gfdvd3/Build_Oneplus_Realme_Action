@@ -118,7 +118,7 @@ jobs:
         run: |
           cd kernel_source
           ln -sf build/kernel/kleaf/workspace.bazel WORKSPACE.bazel
-          echo 'startup --output_user_root=/tmp/bazel_output_root' >> .bazelrc
+          echo '7.1.0' > .bazelversion
 
       - name: Setup Bazelisk
         uses: bazelbuild/setup-bazelisk@v3
