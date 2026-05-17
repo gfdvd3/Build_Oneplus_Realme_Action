@@ -114,13 +114,14 @@ jobs:
         run: |
           git clone --depth=1 https://android.googlesource.com/kernel/build kernel_source/build/kernel
 
-      - name: Setup Bazel workspace
+      - name: Setup Bazel and workspace
         run: |
           cd kernel_source
           ln -sf build/kernel/kleaf/workspace.bazel WORKSPACE.bazel
-          mkdir -p tools
-          cp build/kernel/tools/bazel tools/bazel
-          chmod +x tools/bazel
+          echo 'startup --output_user_root=/tmp/bazel_output_root' >> .bazelrc
+
+      - name: Setup Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
 
       - name: Remove ABI protections and dirty suffix
         run: |
@@ -400,7 +401,7 @@ jobs:
           cd kernel_source
           export CCACHE_DIR=${{ env.CCACHE_DIR }}
           ccache -M ${{ env.CCACHE_MAXSIZE }}
-          tools/bazel build //:kernel_aarch64_dist --config=fast --config=stamp
+          bazel build //:kernel_aarch64_dist --config=fast --config=stamp
           ccache -s
 
       - name: Save ccache
