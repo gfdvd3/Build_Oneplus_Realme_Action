@@ -124,6 +124,9 @@ jobs:
           echo 'import %workspace%/build/kernel/kleaf/bazelrc/fast.bazelrc' >> .bazelrc
           echo 'import %workspace%/build/kernel/kleaf/bazelrc/stamp.bazelrc' >> .bazelrc
           echo '7.0.0' > .bazelversion
+
+      - name: Build kernel with Bazel/Kleaf
+        env:
           USE_BAZEL_VERSION: 7.0.0
         run: |
           cd kernel_source
