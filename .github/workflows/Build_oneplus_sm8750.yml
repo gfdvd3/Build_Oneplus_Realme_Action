@@ -122,6 +122,8 @@ jobs:
 
       - name: Setup Bazelisk
         uses: bazelbuild/setup-bazelisk@v3
+        with:
+          bazelisk-version: latest
 
       - name: Remove ABI protections and dirty suffix
         run: |
@@ -396,6 +398,8 @@ jobs:
           echo "CONFIG_LOCALVERSION_AUTO=n" >> arch/arm64/configs/gki_defconfig
 
       - name: Build kernel with Bazel/Kleaf
+        env:
+          USE_BAZEL_VERSION: 7.1.0
         run: |
           cd kernel_source
           export CCACHE_DIR=${{ env.CCACHE_DIR }}
