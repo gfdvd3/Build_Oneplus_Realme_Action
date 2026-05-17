@@ -198,7 +198,7 @@ jobs:
             unzip -q common.zip
             mv "realme_GT8-AndroidB-common-source-master" common
           elif [ "${DEVICES_NAME}" = "oneplus_ace5_ultra" ] || [ "${DEVICES_NAME}" = "realme_GT7" ]; then
-            aria2c -s16 -x16 -k1M https://github.com/OnePlusOSS/android_kernel_oneplus_mt6991/archive/refs/heads/oneplus/mt6991_b_16.0.0_oneplus_ace5_ultra.zip -o common.zip
+            aria2c -s16 -x16 -k1M https://github.com/gfdvd3/android_kernel_oneplus_mt6991/archive/refs/heads/oneplus/mt6991_b_16.0.0_oneplus_ace5_ultra.zip -o common.zip
             unzip -q common.zip
             mv android_kernel_oneplus_mt6991-* common
           else
