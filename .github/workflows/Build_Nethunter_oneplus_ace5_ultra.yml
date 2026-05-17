@@ -822,16 +822,29 @@ jobs:
 
       - name: 📦 Make AnyKernel3 (创建Anykernel3)
         run: |
-          cp "${GITHUB_WORKSPACE}/.github/workflows/tools/main.bin" ./
-          chmod +x main.bin
-          ./main.bin "make_anykernel3"
-          rm -rf ./main.bin
-          
-      - name: 📤 Upload AnyKernel3 (上传 Anykernel3)
+          IMAGE="kernel_workspace/common/out/arch/arm64/boot/Image"
+          if [ ! -f "$IMAGE" ]; then
+            echo "::error::未找到Image文件: $IMAGE"
+            ls -la kernel_workspace/common/out/arch/arm64/boot/ 2>/dev/null || true
+            exit 1
+          fi
+          cp -r "${GITHUB_WORKSPACE}/.github/workflows/tools/AnyKernel3" ./AnyKernel3
+          IMAGE_FILE="Image"
+          if [ -n "$IMAGENAME" ]; then
+            IMAGE_FILE="${IMAGENAME}"
+          fi
+          cp "$IMAGE" "AnyKernel3/$IMAGE_FILE"
+          cd AnyKernel3
+          zip -r9 "../AK3_Nethunter_${{ env.DEVICES_NAME }}_${{ env.KSU_TYPE }}.zip" ./*
+          cd ..
+          rm -rf AnyKernel3
+          echo "AnyKernel3打包完成（本地模板，无加密）"
+
+      - name: 📤 Upload AnyKernel3 (上传Anykernel3)
         uses: actions/upload-artifact@v5
         with:
-         name: AK3_${{ env.KSUVER }}_${{ env.DEVICES_NAME }}_${{ env.KSU_TYPE }}
-         path: ./AnyKernel3/*
+          name: AK3_Nethunter_${{ env.DEVICES_NAME }}_${{ env.KSU_TYPE }}
+          path: ./AK3_Nethunter_${{ env.DEVICES_NAME }}_${{ env.KSU_TYPE }}.zip
 
   upload_rekernel:
     name: Upload Re-Kernel Module

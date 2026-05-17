@@ -792,25 +792,23 @@ jobs:
             echo "::error::未找到Image文件: $IMAGE"
             exit 1
           fi
-          git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git
-          cp "$IMAGE" AnyKernel3/
-          cd AnyKernel3
-          sed -i 's/do\.(devicecheck|modules|cleanup|cleanout)/do\.(devicecheck|modules)=0/' anykernel.sh
-          sed -i 's/do\.(cleanup|cleanout)=1/do\.(cleanup|cleanout)=0/' anykernel.sh
-          IMAGE_NAME="${IMAGENAME:-Image}"
-          if [ "$IMAGE_NAME" != "Image" ]; then
-            mv Image "$IMAGE_NAME"
+          cp -r "${GITHUB_WORKSPACE}/.github/workflows/tools/AnyKernel3" ./AnyKernel3
+          IMAGE_FILE="Image"
+          if [ -n "$IMAGENAME" ]; then
+            IMAGE_FILE="${IMAGENAME}"
           fi
-          zip -r9 "../AnyKernel3/AK3_${{ env.KSUVER }}_${{ env.DEVICES_NAME }}_${{ env.KSU_TYPE }}.zip" ./*
+          cp "$IMAGE" "AnyKernel3/$IMAGE_FILE"
+          cd AnyKernel3
+          zip -r9 "../AK3_${{ env.KSUVER }}_${{ env.DEVICES_NAME }}_${{ env.KSU_TYPE }}.zip" ./*
           cd ..
           rm -rf AnyKernel3
-          echo "AnyKernel3打包完成（无加密）"
+          echo "AnyKernel3打包完成（本地模板，无加密）"
           
       - name: 📤 Upload AnyKernel3 (上传 Anykernel3)
         uses: actions/upload-artifact@v5
         with:
          name: AK3_${{ env.KSUVER }}_${{ env.DEVICES_NAME }}_${{ env.KSU_TYPE }}
-         path: ./AnyKernel3/*
+         path: ./AK3_${{ env.KSUVER }}_${{ env.DEVICES_NAME }}_${{ env.KSU_TYPE }}.zip
 
   upload_rekernel:
     name: Upload Re-Kernel Module
