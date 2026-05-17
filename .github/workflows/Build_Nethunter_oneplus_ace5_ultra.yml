@@ -121,8 +121,12 @@ jobs:
       - name: Setup Bazel and workspace
         run: |
           cd kernel_source
-          ln -sf build/kernel/kleaf/workspace.bazel WORKSPACE.bazel
+          ls -la build/kernel/kleaf/workspace.bazel
+          cp build/kernel/kleaf/workspace.bazel WORKSPACE.bazel
+          cp build/kernel/kleaf/MODULE.bazel . 2>/dev/null || true
           echo '7.1.0' > .bazelversion
+          echo "Workspace files:"
+          ls -la WORKSPACE.bazel MODULE.bazel 2>/dev/null
 
       - name: Setup Bazelisk
         uses: bazelbuild/setup-bazelisk@v3
