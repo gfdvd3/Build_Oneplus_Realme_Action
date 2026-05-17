@@ -111,11 +111,8 @@ jobs:
           fetch-depth: 1
 
       - name: Checkout Kleaf build system
-        uses: actions/checkout@v4
-        with:
-          repository: https://android.googlesource.com/kernel/build
-          path: kernel_source/build/kernel
-          fetch-depth: 1
+        run: |
+          git clone --depth=1 https://android.googlesource.com/kernel/build kernel_source/build/kernel
 
       - name: Setup Bazel workspace
         run: |
