@@ -245,6 +245,7 @@ jobs:
 
       - name: Add KSU and SUSFS configs
         run: |
+          cd kernel_source
           echo "CONFIG_KSU=y" >> arch/arm64/configs/gki_defconfig
           if [ "${{ github.event.inputs.susfs_enable }}" = "true" ] && [ "${{ github.event.inputs.ksu_type }}" != "none" ]; then
             for opt in \
@@ -328,6 +329,7 @@ jobs:
       - name: Add Re-Kernel support
         if: inputs.rekernel_enable
         run: |
+          cd kernel_source
           echo "CONFIG_REKERNEL=y" >> arch/arm64/configs/gki_defconfig
 
       - name: Add Baseband Guard

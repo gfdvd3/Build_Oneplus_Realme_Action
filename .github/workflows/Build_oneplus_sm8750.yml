@@ -353,6 +353,7 @@ jobs:
       - name: Add Re-Kernel support
         if: inputs.rekernel_enable
         run: |
+          cd kernel_source
           echo "CONFIG_REKERNEL=y" >> arch/arm64/configs/gki_defconfig
 
       - name: Add Baseband Guard
