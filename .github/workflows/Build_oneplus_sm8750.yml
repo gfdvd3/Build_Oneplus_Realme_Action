@@ -122,8 +122,6 @@ jobs:
 
       - name: Setup Bazelisk
         uses: bazelbuild/setup-bazelisk@v3
-        with:
-          bazelisk-version: latest
 
       - name: Remove ABI protections and dirty suffix
         run: |
