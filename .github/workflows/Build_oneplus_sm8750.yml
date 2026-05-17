@@ -100,7 +100,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            python3 python-is-python3 libssl-dev libelf-dev rsync cpio ccache
+            python3 python-is-python3 libssl-dev libelf-dev rsync cpio ccache dos2unix
 
       - name: Checkout kernel source
         uses: actions/checkout@v4
