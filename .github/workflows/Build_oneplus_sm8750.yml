@@ -6,6 +6,7 @@ env:
   KERNEL_BRANCH: oneplus/sm8750_v_16.0.0_oneplus_13_6.6.89
   CCACHE_DIR: /tmp/ccache
   CCACHE_MAXSIZE: 5G
+  SCHED_FILE: oneplus_13_b
 
 on:
   workflow_dispatch:
@@ -66,6 +67,11 @@ on:
         default: false
       baseband_guard:
         description: '内核级基带保护'
+        required: true
+        type: boolean
+        default: true
+      enable_scx:
+        description: '完美风驰调度'
         required: true
         type: boolean
         default: true
@@ -359,6 +365,21 @@ jobs:
           echo "CONFIG_BBG=y" >> arch/arm64/configs/gki_defconfig
           curl -sSL https://github.com/cctv18/Baseband-guard/raw/master/setup.sh | bash
           sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/selinux/selinux,baseband_guard/ } }' security/Kconfig
+
+      - name: Apply 完美风驰调度 patch
+        if: inputs.enable_scx
+        run: |
+          cd kernel_source
+          git clone https://github.com/Numbersf/SCHED_PATCH.git -b sm8750
+          cp "SCHED_PATCH/fengchi_${{ env.SCHED_FILE }}.patch" ./
+          if [ -f "fengchi_${{ env.SCHED_FILE }}.patch" ]; then
+            dos2unix "fengchi_${{ env.SCHED_FILE }}.patch"
+            patch -p1 -F 3 < "fengchi_${{ env.SCHED_FILE }}.patch"
+            echo "完美风驰补丁应用完成"
+          else
+            echo "未匹配到风驰补丁文件"
+            exit 1
+          fi
 
       - name: Set kernel version suffix
         run: |
