@@ -208,7 +208,7 @@ jobs:
         run: |
           cd kernel_source
           git clone --depth=1 https://github.com/cctv18/susfs4oki.git susfs4ksu -b oki-android15-6.6
-          wget https://github.com/${{ github.repository }}/raw/refs/heads/${{ github.ref_name }}/other_patch/69_hide_stuff.patch -O 69_hide_stuff.patch
+          wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/other_patch/69_hide_stuff.patch -O 69_hide_stuff.patch
           cp susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./
           cp susfs4ksu/kernel_patches/fs/* fs/
           cp susfs4ksu/kernel_patches/include/linux/* include/linux/
@@ -223,15 +223,14 @@ jobs:
         if: inputs.lz4_enable
         run: |
           cd kernel_source
-          git clone --depth=1 https://github.com/${{ github.repository }}.git -b ${{ github.ref_name }} oppo_patches
-          cp oppo_patches/zram_patch/001-lz4.patch ./
-          cp oppo_patches/zram_patch/001-lz4-clearMake.patch ./
-          cp oppo_patches/zram_patch/lz4armv8.S lib/
-          cp oppo_patches/zram_patch/002-zstd.patch ./
+          PATCH_REPO=https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main
+          wget $PATCH_REPO/zram_patch/001-lz4.patch
+          wget $PATCH_REPO/zram_patch/001-lz4-clearMake.patch
+          wget $PATCH_REPO/zram_patch/lz4armv8.S -O lib/lz4armv8.S
+          wget $PATCH_REPO/zram_patch/002-zstd.patch
           git apply -p1 < 001-lz4.patch || true
           git apply -p1 < 001-lz4-clearMake.patch || true
           patch -p1 < 002-zstd.patch || true
-          rm -rf oppo_patches
 
       - name: Apply LZ4KD patches
         if: inputs.lz4kd_enable
@@ -452,7 +451,7 @@ jobs:
             *)        KTN="none" ;;
           esac
           if [ "${{ github.event.inputs.lz4kd_enable }}" = "true" ]; then
-            wget https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/${{ github.ref_name }}/zram.zip
+            wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/zram.zip
           fi
           if [ "${{ github.event.inputs.kpm_enable }}" = "kpn" ]; then
             wget https://github.com/cctv18/KPatch-Next/releases/latest/download/kpn.zip

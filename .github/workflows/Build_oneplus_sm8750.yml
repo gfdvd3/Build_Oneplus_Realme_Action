@@ -185,7 +185,7 @@ jobs:
               KSU_TAG=$(curl -sL "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/tags" | grep -o '"name": *"[^"]*"' | head -1 | sed 's/"name": "//;s/"//')
               sed -i "s/KSU_VERSION_TAG_FALLBACK := v0.0.1/KSU_VERSION_TAG_FALLBACK := $KSU_TAG/g" kernel/Kbuild
               cd ../common/drivers/kernelsu 2>/dev/null || cd ../drivers/kernelsu 2>/dev/null || true
-              wget https://github.com/${{ github.repository }}/raw/refs/heads/${{ github.ref_name }}/other_patch/apk_sign.patch 2>/dev/null
+              wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/other_patch/apk_sign.patch 2>/dev/null
               patch -p2 -N -F 3 < apk_sign.patch 2>/dev/null || true
               ;;
             ksu)
@@ -207,7 +207,7 @@ jobs:
         run: |
           cd kernel_source
           git clone --depth=1 https://github.com/cctv18/susfs4oki.git susfs4ksu -b oki-android15-6.6
-          wget https://github.com/${{ github.repository }}/raw/refs/heads/${{ github.ref_name }}/other_patch/69_hide_stuff.patch -O 69_hide_stuff.patch
+          wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/other_patch/69_hide_stuff.patch -O 69_hide_stuff.patch
           cp susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./
           cp susfs4ksu/kernel_patches/fs/* fs/
           cp susfs4ksu/kernel_patches/include/linux/* include/linux/
@@ -222,15 +222,14 @@ jobs:
         if: inputs.lz4_enable
         run: |
           cd kernel_source
-          git clone --depth=1 https://github.com/${{ github.repository }}.git -b ${{ github.ref_name }} oppo_patches
-          cp oppo_patches/zram_patch/001-lz4.patch ./
-          cp oppo_patches/zram_patch/001-lz4-clearMake.patch ./
-          cp oppo_patches/zram_patch/lz4armv8.S lib/
-          cp oppo_patches/zram_patch/002-zstd.patch ./
+          PATCH_REPO=https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main
+          wget $PATCH_REPO/zram_patch/001-lz4.patch
+          wget $PATCH_REPO/zram_patch/001-lz4-clearMake.patch
+          wget $PATCH_REPO/zram_patch/lz4armv8.S -O lib/lz4armv8.S
+          wget $PATCH_REPO/zram_patch/002-zstd.patch
           git apply -p1 < 001-lz4.patch || true
           git apply -p1 < 001-lz4-clearMake.patch || true
           patch -p1 < 002-zstd.patch || true
-          rm -rf oppo_patches
 
       - name: Apply LZ4KD patches
         if: inputs.lz4kd_enable
@@ -295,17 +294,17 @@ jobs:
             echo "$opt" >> arch/arm64/configs/gki_defconfig
           done
           cd arch/arm64/configs
-          wget https://github.com/${{ github.repository }}/raw/refs/heads/${{ github.ref_name }}/other_patch/config.patch 2>/dev/null
+          wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/other_patch/config.patch 2>/dev/null
           patch -p3 -F 3 < config.patch 2>/dev/null || true
 
       - name: Add Droidspaces container support
         if: inputs.droidspaces_enable != 'false'
         run: |
           cd kernel_source
-          wget https://github.com/${{ github.repository }}/raw/refs/heads/${{ github.ref_name }}/droidspaces_patch/fix_sysvipc_kabi_6_7_8.patch
-          wget https://github.com/${{ github.repository }}/raw/refs/heads/${{ github.ref_name }}/droidspaces_patch/fix_oplus_bsp_midas.patch
-          wget https://github.com/${{ github.repository }}/raw/refs/heads/${{ github.ref_name }}/droidspaces_patch/ntsync_base.patch
-          wget https://github.com/${{ github.repository }}/raw/refs/heads/${{ github.ref_name }}/droidspaces_patch/ntsync_compat_android15-6.6.patch
+          wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/droidspaces_patch/fix_sysvipc_kabi_6_7_8.patch
+          wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/droidspaces_patch/fix_oplus_bsp_midas.patch
+          wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/droidspaces_patch/ntsync_base.patch
+          wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/droidspaces_patch/ntsync_compat_android15-6.6.patch
           patch -p1 -F 3 < fix_sysvipc_kabi_6_7_8.patch || true
           patch -p1 -F 3 < fix_oplus_bsp_midas.patch || true
           patch -p1 -F 3 < ntsync_base.patch || true
@@ -321,7 +320,7 @@ jobs:
           if [ "${{ github.event.inputs.droidspaces_enable }}" = "extend" ]; then
             echo "CONFIG_BT_HCIVHCI=y" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_STATIC_USERMODEHELPER=n" >> arch/arm64/configs/gki_defconfig
-            wget https://github.com/${{ github.repository }}/raw/refs/heads/${{ github.ref_name }}/droidspaces_patch/evdi_drm.patch
+            wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/droidspaces_patch/evdi_drm.patch
             patch -p1 -F 3 < evdi_drm.patch || true
             echo "CONFIG_DRM_LINDROID_EVDI=y" >> arch/arm64/configs/gki_defconfig
           fi
@@ -476,7 +475,7 @@ jobs:
             *)        KTN="none" ;;
           esac
           if [ "${{ github.event.inputs.lz4kd_enable }}" = "true" ]; then
-            wget https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/${{ github.ref_name }}/zram.zip
+            wget https://raw.githubusercontent.com/cctv18/oppo_oplus_realme_sm8750/refs/heads/main/zram.zip
           fi
           if [ "${{ github.event.inputs.kpm_enable }}" = "kpn" ]; then
             wget https://github.com/cctv18/KPatch-Next/releases/latest/download/kpn.zip
